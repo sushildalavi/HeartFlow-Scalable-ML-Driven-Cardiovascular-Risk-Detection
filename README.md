@@ -1,11 +1,10 @@
-# HeartFlow
+# heartrisk
 
 An R notebook that explores the Cleveland heart disease data (303 rows) and compares a random forest, XGBoost and a
 support vector machine at predicting whether a patient has heart disease. It was written in Google Colab with the R
 kernel.
 
-This is a small modelling exercise on one public dataset. It is not a clinical tool. Despite the repository name, there
-is no distributed processing here: no PySpark, HDFS or topic modelling code.
+This is a small modelling exercise on one public dataset. It is not a clinical tool.
 
 ## Contents
 
