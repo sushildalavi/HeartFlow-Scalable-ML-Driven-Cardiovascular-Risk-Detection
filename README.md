@@ -1,98 +1,87 @@
-# HeartFlow: Scalable ML-Driven Cardiovascular Risk Detection
+# HeartFlow
 
-This project presents a hybrid machine learning workflow to predict the likelihood of heart disease using clinical and physiological data. The solution combines robust modeling and visualization in R with simulated distributed data processing using PySpark and HDFS concepts to demonstrate scalable healthcare analytics.
+An R notebook that explores the Cleveland heart disease data (303 records) and compares a random forest, XGBoost and a
+support vector machine at predicting whether a patient has heart disease. It was written in Google Colab with the R
+kernel.
 
----
+This is a small modelling exercise on one public dataset. It is not a clinical tool. Despite the repository name, there
+is no distributed processing here: no PySpark, HDFS or topic modelling code.
 
-## Dataset
+## Contents
 
-- **Source**: [Kaggle - Heart Disease Predictions by Desalegn Geb](https://www.kaggle.com/code/desalegngeb/heart-disease-predictions/notebook)
-- **Based on**: Cleveland Heart Disease dataset from the UCI Machine Learning Repository
-- **Samples**: 303 patient records
-- **Features**:
-  - Age, Sex, Chest Pain Type (`cp`), Resting Blood Pressure (`trestbps`)
-  - Cholesterol (`chol`), Fasting Blood Sugar (`fbs`), Resting ECG (`restecg`)
-  - Max Heart Rate (`thalach`), Exercise Induced Angina (`exang`)
-  - ST Depression (`oldpeak`), Slope of Peak Exercise, Major Vessels (`ca`), Thalassemia (`thal`)
-- **Label**: `target` (1 = presence of heart disease, 0 = absence)
+- `heartDiseasePrediction.ipynb`: exploratory plots, preprocessing, the three models, confusion matrices and ROC curves.
+- `heart.csv`: the data, 303 rows with 13 features and a `target` column.
 
----
+## Read this before using the labels
 
-## Project Highlights
+In this copy of the data the `target` column is inverted relative to what its name suggests:
 
-- Built an end-to-end ML pipeline in R with Random Forest, SVM, and XGBoost models.
-- Simulated distributed healthcare data ingestion and transformation using PySpark DataFrames and HDFS workflows.
-- Applied topic modeling (LDA, NMF) to explore interpretability and textual insights (conceptual integration).
-- Evaluated model performance with confusion matrix heatmaps, ROC curves, and correlation visualizations.
+| `target` | Meaning | Rows |
+|---|---|---|
+| 0 | Heart disease present (UCI `num` greater than 0) | 138 |
+| 1 | No heart disease (UCI `num` equal to 0) | 165 |
 
----
+This was checked by matching all 303 rows on eight clinical columns against `processed.cleveland.data` from UCI.
+`caret` treats the first factor level, `0`, as the positive class, so the precision, recall and F1 values below refer to
+detecting disease.
 
-## Exploratory Data Analysis
+Other data caveats:
 
-- Correlation matrix visualized using `corrplot`
-- Pairplots using `GGally::ggpairs` for multivariate relationships
-- Density plots, boxplots, and barplots for feature-target comparisons
-- Summary statistics with `summary()` and `dplyr`
+- `ca = 4` (5 rows) and `thal = 0` (2 rows) are missing values (`?`) in the UCI file. The notebook treats them as
+  ordinary numbers.
+- The category codes differ from the UCI ones. In UCI terms, `cp` 0, 1, 2, 3 are 4, 2, 3, 1; `restecg` 0, 1, 2 are
+  2, 0, 1; `slope` 0, 1, 2 are 3, 2, 1; and `thal` 1, 2, 3 are 6, 3, 7. All are modelled as numbers.
+- There is one duplicated row (both copies fall in the training split with the seed used).
 
----
+## Method
 
-## Machine Learning Models
+1. Plots: summary table, correlation matrix, histograms, pair plot, density, box and bar plots.
+2. Stratified 80/20 split with `caret::createDataPartition` after `set.seed(123)`: 243 training rows, 60 test rows.
+3. Centring and scaling fitted on the training rows only.
+4. Models with near-default settings: `randomForest`, `xgboost` (100 rounds, logistic objective) and `e1071::svm`
+   (radial kernel).
 
-- Random Forest (`randomForest`)
-- Support Vector Machine (`e1071`)
-- XGBoost (`xgboost`)
+## Results
 
-Evaluation metrics include:
+Test set of 60 rows, 27 with disease. Always predicting "no disease" would score 0.55 accuracy.
 
-- Accuracy
-- Precision
-- Recall
-- F1 Score
-- AUC and ROC curves
-- Confusion matrices (visualized)
+| Model | Accuracy | Precision | Recall | F1 | AUC |
+|---|---|---|---|---|---|
+| Random forest | 0.817 | 0.833 | 0.741 | 0.784 | 0.880 |
+| SVM | 0.817 | 0.808 | 0.778 | 0.792 | 0.870 |
+| XGBoost | 0.750 | 0.731 | 0.704 | 0.717 | 0.835 |
 
----
+Reproduced in November 2026 with R 4.6.2, caret 7.1.0, randomForest 4.7-1.2, e1071 1.7-17, pROC 1.19.1 and xgboost
+1.7.11.1, running the cells once in order. All values match the outputs saved in the notebook except the random forest
+AUC, which the saved output reports as 0.888.
 
-## Results Summary
+These come from a single split with no cross-validation or hyperparameter tuning. One test patient is 1.7 percentage
+points of accuracy, so the differences between models are not meaningful.
 
-| Model         | Accuracy | Precision | Recall | F1 Score | AUC    |
-|---------------|----------|-----------|--------|----------|--------|
-| Random Forest | 81.67%   | 83.33%    | 74.07% | 78.43%   | 0.888  |
-| SVM           | 81.67%   | 80.77%    | 77.78% | 79.25%   | 0.870  |
-| XGBoost       | 75.00%   | 73.08%    | 70.37% | 71.70%   | 0.835  |
+## Running it
 
----
+You need R with the Jupyter R kernel ([IRkernel](https://irkernel.github.io/)), or Google Colab with the R runtime. Keep
+`heart.csv` in the working directory.
 
-## Tools and Technologies
+Cells 0-2 install and load packages. They fetch the current `xgboost`, whose 3.x interface no longer accepts the
+`xgboost(data = ...)` call used in cell 17. After cell 2 and before cell 3, install a 1.7 release (this builds from
+source):
 
-- **R Packages**:
-  - `caret`, `ggplot2`, `dplyr`, `xgboost`, `e1071`, `randomForest`, `pROC`, `GGally`, `corrplot`, `gridExtra`
-- **Big Data Simulation**:
-  - PySpark: DataFrames, RDDs, basic transformations
-  - HDFS-style file I/O (simulated)
-- **Topic Modeling**:
-  - LDA and NMF (conceptual integration)
+```r
+install.packages(
+  "https://cran.r-project.org/src/contrib/Archive/xgboost/xgboost_1.7.11.1.tar.gz",
+  repos = NULL, type = "source"
+)
+```
 
----
+If `patchwork` is missing (the notebook loads it without installing it), run `install.packages("patchwork")`.
 
-## How to Run
+## Data source and credit
 
-1. Clone the repository
-2. Ensure `heart.csv` is placed in the project root
-3. Run the R Notebook or script in Jupyter (IRkernel) or RStudio
-4. Optionally, execute `pyspark_simulation.py` for Big Data simulation
-5. Install dependencies in R using `install.packages()` and configure PySpark if needed
+- Janosi, A., Steinbrunn, W., Pfisterer, M. and Detrano, R. (1989). Heart Disease [dataset]. UCI Machine Learning
+  Repository. <https://doi.org/10.24432/C52P4X>. Licensed CC BY 4.0.
+- This project credits the Kaggle notebook
+  [Heart Disease Predictions by desalegngeb](https://www.kaggle.com/code/desalegngeb/heart-disease-predictions/notebook)
+  as its source.
 
----
-
-## License
-
-This repository is intended for educational and research purposes only.
-
----
-
-## Acknowledgments
-
-- UCI Machine Learning Repository  
-- Kaggle contributor Desalegn Geb  
-- Apache Spark and the open-source R community
+The repository is intended for educational and research purposes.
