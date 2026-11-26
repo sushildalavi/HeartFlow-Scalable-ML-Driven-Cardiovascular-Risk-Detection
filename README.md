@@ -1,6 +1,6 @@
 # HeartFlow
 
-An R notebook that explores the Cleveland heart disease data (303 records) and compares a random forest, XGBoost and a
+An R notebook that explores the Cleveland heart disease data (303 rows) and compares a random forest, XGBoost and a
 support vector machine at predicting whether a patient has heart disease. It was written in Google Colab with the R
 kernel.
 
@@ -21,7 +21,7 @@ In this copy of the data the `target` column is inverted relative to what its na
 | 0 | Heart disease present (UCI `num` greater than 0) | 138 |
 | 1 | No heart disease (UCI `num` equal to 0) | 165 |
 
-This was checked by matching all 303 rows on eight clinical columns against `processed.cleveland.data` from UCI.
+This was checked by matching all 303 rows (302 distinct records) on eight clinical columns against `processed.cleveland.data` from UCI.
 `caret` treats the first factor level, `0`, as the positive class, so the precision, recall and F1 values below refer to
 detecting disease.
 
@@ -31,7 +31,8 @@ Other data caveats:
   ordinary numbers.
 - The category codes differ from the UCI ones. In UCI terms, `cp` 0, 1, 2, 3 are 4, 2, 3, 1; `restecg` 0, 1, 2 are
   2, 0, 1; `slope` 0, 1, 2 are 3, 2, 1; and `thal` 1, 2, 3 are 6, 3, 7. All are modelled as numbers.
-- There is one duplicated row (both copies fall in the training split with the seed used).
+- There is one duplicated row (both copies fall in the training split with the seed used), and one UCI record
+  (`60,0,4,158,305,0,2,161,0,0.0,1,0.0,3.0,1`) is missing.
 
 ## Method
 
@@ -63,7 +64,7 @@ points of accuracy, so the differences between models are not meaningful.
 You need R with the Jupyter R kernel ([IRkernel](https://irkernel.github.io/)), or Google Colab with the R runtime. Keep
 `heart.csv` in the working directory.
 
-Cells 0-2 install and load packages. They fetch the current `xgboost`, whose 3.x interface no longer accepts the
+Cell numbers count from 0. Cells 0-2 install and load packages. They fetch the current `xgboost`, whose 3.x interface no longer accepts the
 `xgboost(data = ...)` call used in cell 17. After cell 2 and before cell 3, install a 1.7 release (this builds from
 source):
 
@@ -84,4 +85,4 @@ If `patchwork` is missing (the notebook loads it without installing it), run `in
   [Heart Disease Predictions by desalegngeb](https://www.kaggle.com/code/desalegngeb/heart-disease-predictions/notebook)
   as its source.
 
-The repository is intended for educational and research purposes.
+The repository is intended for educational and research purposes only.
